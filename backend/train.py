@@ -144,7 +144,7 @@ def train_model(X, y):
     
     for label_value in valid_label_values:
         # Filtrar textos para el valor de label actual
-        label_texts = df[df['Label'] == label_value]['message+']
+        label_texts = df[df['Label'] == label_value]['message']
         most_frequent = get_most_frequent_words(label_texts, n=10)  # n puede ser ajustado
         words.append(most_frequent)
 
