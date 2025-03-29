@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List
 import pandas as pd
 import joblib
-
+from fastapi.middleware.cors import CORSMiddleware
 # Importa las funciones para actualizar el vectorizador, escalador y features
 from preprocessing import set_vectorizer, set_scaler, set_selected_features
 
@@ -32,7 +32,7 @@ except Exception as e:
 
 # Modelo de entrada para el endpoint /predict
 class PredictRequest(BaseModel):
-    Textos_espanol: List[str]
+    messages: List[str]
 
 # Modelo de respuesta para el endpoint /predict
 class PredictionResponse(BaseModel):
@@ -41,15 +41,24 @@ class PredictionResponse(BaseModel):
     
 # Modelo de entrada para el endpoint /retrain
 class RetrainRequest(BaseModel):
-    Textos_espanol: List[str]
+    messages: List[str]
     sdg: List[int]
 
 
 app = FastAPI(title="API de Predicción de Fake News")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 @app.post("/predict", response_model=PredictionResponse)
 def predict(request: PredictRequest):
-    textos = request.Textos_espanol
+    textos = request.messages
     if not textos:
         raise HTTPException(status_code=400, detail="La lista de textos está vacía")
     
@@ -70,7 +79,7 @@ from retrain_model import retrain_model_api
 
 @app.post("/retrain")
 def retrain(request: RetrainRequest):
-    textos = request.Textos_espanol
+    textos = request.messages
     etiquetas = request.sdg
     if not textos or not etiquetas:
         raise HTTPException(status_code=400, detail="Se deben proporcionar textos y etiquetas")
